@@ -3,13 +3,14 @@ import (
     "fmt"
     "log"
     "net"
-    //"bufio"
 )
 
-type HeartBeatConn struct {
+type UDPConn struct {
   IP string
   Port int
   Socket net.Conn
+  PacketsSent int
+  PacketsReceived int
 }
 
 func checkError(err error) {
@@ -18,7 +19,7 @@ func checkError(err error) {
   }
 }
 
-func SendMessage(conn *HeartBeatConn, message string) (net.Conn) {
+func SendMessage(conn *UDPConn, message string) (net.Conn) {
   var err error
   socket := conn.Socket
 
@@ -28,31 +29,27 @@ func SendMessage(conn *HeartBeatConn, message string) (net.Conn) {
     checkError(err)
   }
 
-  //buffer :=  make([]byte, 2048)
-
   fmt.Printf("Sending message: %s\n", message)
   fmt.Fprintln(socket, message) // send heartbeat through socket
+  conn.PacketsSent++
 
-  /* Not receiving ACK yet
-  _, err = bufio.NewReader(socket).Read(buffer)
-  checkError(err)
-  */
   return socket
 }
 
-func SendHeartbeat(conn *HeartBeatConn) (net.Conn) {
+func SendHeartbeat(conn *UDPConn) (net.Conn) {
   return SendMessage(conn, "1")
 }
 
-func ListenHeartbeats(port int) {
-  listenAddr, err := net.ResolveUDPAddr("udp",fmt.Sprintf(":%d", port))
-	socket, err := net.ListenUDP("udp", listenAddr)
+func ListenHeartbeats(listenConn *UDPConn) {
+  listenAddr, err := net.ResolveUDPAddr("udp",fmt.Sprintf(":%d", listenConn.Port))
+	listenSocket, err := net.ListenUDP("udp", listenAddr)
 	checkError(err)
 
   buffer := make([]byte, 1024)
   for {
-      n, sentAddr, err := socket.ReadFromUDP(buffer)
-      fmt.Println("Received ",string(buffer[0:n]), " from ", sentAddr)
-      checkError(err)
+    n, sentAddr, err := listenSocket.ReadFromUDP(buffer)
+    checkError(err)
+    listenConn.PacketsReceived++
+    fmt.Println("Received ",string(buffer[0:n]), " from ", sentAddr)
   }
 }

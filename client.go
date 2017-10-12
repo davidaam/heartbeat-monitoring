@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-  conn := udpUtils.HeartBeatConn { IP: "127.0.0.1", Port: 1234 }
+  conn := udpUtils.UDPConn { IP: "127.0.0.1", Port: 1234 }
   connPointer := &conn
   for {
     connPointer.Socket = udpUtils.SendHeartbeat(connPointer)
