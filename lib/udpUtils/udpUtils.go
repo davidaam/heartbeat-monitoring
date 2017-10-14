@@ -8,14 +8,24 @@ import (
     "time"
 )
 
-type HeartBeatConn struct {
+type HeartbeatConn struct {
   IP string
   Port int64
   Socket net.Conn
   PacketsSent int64
   PacketsReceived int64
-  LastHeartBeatTime int64
+  LastHeartbeatTime int64
   Alive bool
+}
+
+type Heartbeat struct {
+  Message string
+  Timestamp int64
+}
+
+func parseHeartbeat (message string) (*Heartbeat, error) {
+  timestamp, err := strconv.ParseInt(strings.TrimSpace(message), 10, 64)
+  return &Heartbeat{ Message: message, Timestamp: timestamp }, err
 }
 
 func checkError(err error) {
@@ -24,7 +34,7 @@ func checkError(err error) {
   }
 }
 
-func SendMessage(conn *HeartBeatConn, message string) (net.Conn) {
+func SendMessage(conn *HeartbeatConn, message string) (net.Conn) {
   var err error
   socket := conn.Socket
 
@@ -41,27 +51,27 @@ func SendMessage(conn *HeartBeatConn, message string) (net.Conn) {
   return socket
 }
 
-func SendHeartbeat(conn *HeartBeatConn) (net.Conn) {
+func SendHeartbeat(conn *HeartbeatConn) (net.Conn) {
   return SendMessage(conn, strconv.Itoa(int(time.Now().Unix())))
 }
 
-func listenHeartbeats(listenSocket *net.UDPConn, listenConn *HeartBeatConn, receiveCallback func(string)) {
+func listenHeartbeats(listenSocket *net.UDPConn, listenConn *HeartbeatConn, receiveCallback func(*Heartbeat)) {
   buffer := make([]byte, 1024)
   for {
     n, _, err := listenSocket.ReadFromUDP(buffer)
     checkError(err)
 
-    receivedMessage := string(buffer[0:n])
-    listenConn.LastHeartBeatTime, err = strconv.ParseInt(strings.TrimSpace(receivedMessage), 10, 64)
+    heartbeat, err := parseHeartbeat(string(buffer[0:n]))
     checkError(err)
+    listenConn.LastHeartbeatTime = heartbeat.Timestamp
 
     listenConn.PacketsReceived++
     listenConn.Alive = true
-    receiveCallback(receivedMessage)
+    receiveCallback(heartbeat)
   }
 }
 
-func StartServer(listenConn *HeartBeatConn, receiveCallback func(string), noHeartBeatsCallback func(*HeartBeatConn)) {
+func StartServer(listenConn *HeartbeatConn, receiveCallback func(*Heartbeat), noHeartbeatsCallback func(*HeartbeatConn)) {
   listenAddr, err := net.ResolveUDPAddr("udp",fmt.Sprintf(":%d", listenConn.Port))
 	listenSocket, err := net.ListenUDP("udp", listenAddr)
 	checkError(err)
@@ -70,10 +80,10 @@ func StartServer(listenConn *HeartBeatConn, receiveCallback func(string), noHear
 
   for {
     time.Sleep(time.Second)
-    // If no heartbeat has been sent ever, the noHeartBeatsCallback won't be called, since it's
+    // If no heartbeat has been sent ever, the noHeartbeatsCallback won't be called, since it's
     // waiting for the client to initially launch.
-    if listenConn.Alive && listenConn.LastHeartBeatTime > 60 && time.Now().Unix() - listenConn.LastHeartBeatTime > 60 {
-      noHeartBeatsCallback(listenConn)
+    if listenConn.Alive && listenConn.LastHeartbeatTime > 60 && time.Now().Unix() - listenConn.LastHeartbeatTime > 60 {
+      noHeartbeatsCallback(listenConn)
       listenConn.Alive = false
     }
   }
