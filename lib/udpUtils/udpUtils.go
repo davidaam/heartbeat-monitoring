@@ -19,13 +19,23 @@ type HeartbeatConn struct {
 }
 
 type Heartbeat struct {
-  Message string
+  ClientID string
   Timestamp int64
 }
 
+func (h *Heartbeat) to_string() string {
+  return fmt.Sprintf("%s|%d", h.ClientID, h.Timestamp)
+}
+
+func NewHeartbeat (clientID string) *Heartbeat {
+  return &Heartbeat { ClientID: clientID, Timestamp: time.Now().Unix() }
+}
+
 func parseHeartbeat (message string) (*Heartbeat, error) {
-  timestamp, err := strconv.ParseInt(strings.TrimSpace(message), 10, 64)
-  return &Heartbeat{ Message: message, Timestamp: timestamp }, err
+  arr := strings.Split(message, "|")
+  clientId := arr[0]
+  timestamp, err := strconv.ParseInt(strings.TrimSpace(arr[1]), 10, 64)
+  return &Heartbeat{ ClientID: clientId, Timestamp: timestamp }, err
 }
 
 func checkError(err error) {
@@ -51,8 +61,8 @@ func SendMessage(conn *HeartbeatConn, message string) (net.Conn) {
   return socket
 }
 
-func SendHeartbeat(conn *HeartbeatConn) (net.Conn) {
-  return SendMessage(conn, strconv.Itoa(int(time.Now().Unix())))
+func SendHeartbeat(conn *HeartbeatConn, heartbeat *Heartbeat) (net.Conn) {
+  return SendMessage(conn, heartbeat.to_string())
 }
 
 func listenHeartbeats(listenSocket *net.UDPConn, listenConn *HeartbeatConn, receiveCallback func(*Heartbeat)) {

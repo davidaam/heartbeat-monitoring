@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-  db := dbLogger.InitializeDB("heartbeats")
+  db := dbLogger.InitializeDB("heartbeats.sqlite3")
 
   receiveCallback := func (heartbeat *udpUtils.Heartbeat) {
     fmt.Println("Heartbeat received")
