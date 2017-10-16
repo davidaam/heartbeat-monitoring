@@ -14,4 +14,6 @@ heartbeat data on the client as well, so it can be resent to the server when it'
 - ###Go-sql
 ```
 go get -u github.com/go-sql-driver/mysql
+# Alternatively go get -u github.com/go-sql-driver/sqlite
+go get -u github.com/gorilla/mux
 ```

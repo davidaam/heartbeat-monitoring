@@ -19,8 +19,8 @@ type HeartbeatConn struct {
 }
 
 type Heartbeat struct {
-  ClientID string
-  Timestamp int64
+  ClientID string `json:"clientID"`
+  Timestamp int64 `json:"timestamp"`
 }
 
 func (h *Heartbeat) to_string() string {
