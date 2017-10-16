@@ -1,8 +1,8 @@
 package main
 
 import (
-  "./lib/udpUtils"
-  "./lib/dbLogger"
+  "../lib/heartbeat"
+  "../lib/dbLogger"
   "fmt"
   "time"
 )
@@ -10,12 +10,12 @@ import (
 func main() {
   db := dbLogger.InitializeDB("heartbeats.sqlite3")
 
-  receiveCallback := func (heartbeat *udpUtils.Heartbeat) {
+  receiveCallback := func (heartbeat *heartbeat.Heartbeat) {
     fmt.Println("Heartbeat received")
     go dbLogger.LogHeartbeat(db, heartbeat)
   }
-  noHeartbeatsCallback := func (conn *udpUtils.HeartbeatConn) {
+  noHeartbeatsCallback := func (conn *heartbeat.HeartbeatConn) {
     fmt.Printf("No heartbeat received in the last %d seconds...\n", time.Now().Unix() - conn.LastHeartbeatTime)
   }
-  udpUtils.StartServer(&udpUtils.HeartbeatConn { Port: 1234 }, receiveCallback, noHeartbeatsCallback)
+  heartbeat.StartServer(&heartbeat.HeartbeatConn { Port: 1234 }, receiveCallback, noHeartbeatsCallback)
 }

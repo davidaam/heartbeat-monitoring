@@ -1,10 +1,10 @@
 package dbLogger
 
 import (
-  "../udpUtils"
+  "../heartbeat"
   "database/sql"
-  _ "github.com/mattn/go-sqlite3"
   "log"
+  _ "github.com/mattn/go-sqlite3"
   //_ "github.com/go-sql-driver/mysql"
 )
 
@@ -34,7 +34,7 @@ func CreateTables(db *sql.DB) {
 	if err != nil { panic(err) }
 }
 
-func LogHeartbeat(db *sql.DB, heartbeat *udpUtils.Heartbeat) {
+func LogHeartbeat(db *sql.DB, heartbeat *heartbeat.Heartbeat) {
   tx, err := db.Begin()
   if err != nil {
     log.Fatal(err)
