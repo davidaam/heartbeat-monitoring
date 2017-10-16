@@ -7,7 +7,7 @@ import (
 
 func Router() *mux.Router {
   r := mux.NewRouter()
-  r.HandleFunc("/", handlers.Heartbeats)
-  r.HandleFunc("/{clientID}", handlers.ClientHeartbeats)
+  r.HandleFunc("/heartbeats", handlers.Heartbeats)
+  r.HandleFunc("/heartbeats/{clientID}", handlers.ClientHeartbeats)
   return r
 }

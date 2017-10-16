@@ -1,0 +1,38 @@
+{
+  "name": "heartbeat",
+  "version": "1.0.0",
+  "description": "Heartbeat monitoring system",
+  "main": "bin/app.bundle.js",
+  "scripts": {
+    "start": "webpack --progress --colors --watch",
+    "build": "webpack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/davidaam/heartbeat-monitoring.git"
+  },
+  "keywords": [
+    "heartbeat",
+    "monitoring",
+    "heartbeat",
+    "monitoring"
+  ],
+  "author": "David Atias",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/davidaam/heartbeat-monitoring/issues"
+  },
+  "homepage": "https://github.com/davidaam/heartbeat-monitoring#readme",
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-preset-env": "^1.6.0",
+    "webpack": "^3.7.1"
+  },
+  "dependencies": {
+    "d3": "^4.11.0",
+    "d3-timeline-chart": "^1.3.0",
+    "moment": "^2.19.1",
+    "request": "^2.83.0"
+  }
+}

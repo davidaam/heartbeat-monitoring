@@ -34,8 +34,10 @@ func CreateTables(db *sql.DB) {
 
 	heartbeatsTable := `
 	CREATE TABLE IF NOT EXISTS heartbeats(
-		ts timestamp NOT NULL PRIMARY KEY,
-		client_id VARCHAR(100) NOT NULL
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+		ts timestamp NOT NULL,
+		client_id VARCHAR(100) NOT NULL,
+    CONSTRAINT UNIQ_ts_client_id UNIQUE (ts, client_id)
 	);
 	`
 	_, err := db.Exec(heartbeatsTable)
@@ -76,7 +78,7 @@ func fetchHeartbeats(rows *sql.Rows) []*heartbeat.Heartbeat {
 }
 
 func ListHeartbeats() []*heartbeat.Heartbeat {
-  db := InitializeDB("../../heartbeats.sqlite3")
+  db := InitializeDB("../../server/heartbeats.sqlite3")
 	rows, err := db.Query("SELECT client_id, ts FROM heartbeats")
   checkError(err)
 
@@ -84,7 +86,7 @@ func ListHeartbeats() []*heartbeat.Heartbeat {
 }
 
 func GetHeartbeats(clientID string) []*heartbeat.Heartbeat {
-  db := InitializeDB("../../heartbeats.sqlite3")
+  db := InitializeDB("../../server/heartbeats.sqlite3")
 	rows, err := db.Query("SELECT client_id, ts FROM heartbeats WHERE client_id=?", clientID)
   checkError(err)
 
