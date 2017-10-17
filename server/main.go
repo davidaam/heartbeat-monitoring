@@ -4,18 +4,29 @@ import (
   "../lib/heartbeat"
   "../lib/dbLogger"
   "fmt"
-  "time"
+  "path/filepath"
 )
 
 func main() {
-  db := dbLogger.InitializeDB("heartbeats.sqlite3")
+  sqliteDB, _ := filepath.Abs("heartbeats.sqlite3")
+
+  fmt.Printf("*** Heartbeats will be logged in %s ***\n\n", sqliteDB)
+  db := dbLogger.InitializeDB(sqliteDB)
 
   receiveCallback := func (heartbeat *heartbeat.Heartbeat) {
     fmt.Println("Heartbeat received")
     go dbLogger.LogHeartbeat(db, heartbeat)
   }
-  noHeartbeatsCallback := func (conn *heartbeat.HeartbeatConn) {
-    fmt.Printf("No heartbeat received in the last %d seconds...\n", time.Now().Unix() - conn.LastHeartbeatTime)
+  timeoutCallback := func (timeout int32) {
+    fmt.Printf("No heartbeat received in %d seconds...\n", timeout)
   }
-  heartbeat.StartServer(&heartbeat.HeartbeatConn { Port: 1234 }, receiveCallback, noHeartbeatsCallback)
+
+  listener := heartbeat.HeartbeatListener {
+    Port: 1234,
+    ReceiveCallback: receiveCallback,
+    TimeoutCallback: timeoutCallback,
+    Timeout: 10,
+  }
+
+  listener.StartServer()
 }

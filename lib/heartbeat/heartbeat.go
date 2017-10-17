@@ -8,14 +8,19 @@ import (
     "time"
 )
 
-type HeartbeatConn struct {
+type HeartbeatListener struct {
+  IP string
+  Port int64
+  Timeout int32
+  ReceiveCallback func(*Heartbeat)
+  TimeoutCallback func(int32)
+  Socket *net.UDPConn
+}
+
+type HeartbeatSender struct {
   IP string
   Port int64
   Socket net.Conn
-  PacketsSent int64
-  PacketsReceived int64
-  LastHeartbeatTime int64
-  Alive bool
 }
 
 type Heartbeat struct {
@@ -23,7 +28,7 @@ type Heartbeat struct {
   Timestamp int64 `json:"timestamp"`
 }
 
-func (h *Heartbeat) to_string() string {
+func (h *Heartbeat) toString() string {
   return fmt.Sprintf("%s|%d", h.ClientID, h.Timestamp)
 }
 
@@ -44,57 +49,61 @@ func checkError(err error) {
   }
 }
 
-func SendMessage(conn *HeartbeatConn, message string) (net.Conn) {
-  var err error
-  socket := conn.Socket
-
-  if socket == nil {
-    server := fmt.Sprintf("%s:%d", conn.IP, conn.Port)
-    socket, err = net.Dial("udp", server)
-    checkError(err)
-  }
-
+func (sender *HeartbeatSender) Send(heartbeat *Heartbeat) {
+  message := heartbeat.toString()
   fmt.Printf("Sending message: %s\n", message)
-  fmt.Fprintln(socket, message) // send heartbeat through socket
-  conn.PacketsSent++
-
-  return socket
+  fmt.Fprintln(sender.Socket, message)
 }
 
-func SendHeartbeat(conn *HeartbeatConn, heartbeat *Heartbeat) (net.Conn) {
-  return SendMessage(conn, heartbeat.to_string())
-}
-
-func listenHeartbeats(listenSocket *net.UDPConn, listenConn *HeartbeatConn, receiveCallback func(*Heartbeat)) {
+func (listener *HeartbeatListener) listenHeartbeats(mainChannel chan *Heartbeat) {
   buffer := make([]byte, 1024)
   for {
-    n, _, err := listenSocket.ReadFromUDP(buffer)
+    n, _, err := listener.Socket.ReadFromUDP(buffer)
     checkError(err)
 
     heartbeat, err := parseHeartbeat(string(buffer[0:n]))
     checkError(err)
-    listenConn.LastHeartbeatTime = heartbeat.Timestamp
 
-    listenConn.PacketsReceived++
-    listenConn.Alive = true
-    receiveCallback(heartbeat)
+    mainChannel <- heartbeat
   }
 }
 
-func StartServer(listenConn *HeartbeatConn, receiveCallback func(*Heartbeat), noHeartbeatsCallback func(*HeartbeatConn)) {
-  listenAddr, err := net.ResolveUDPAddr("udp",fmt.Sprintf(":%d", listenConn.Port))
-	listenSocket, err := net.ListenUDP("udp", listenAddr)
-	checkError(err)
-
-  go listenHeartbeats(listenSocket, listenConn, receiveCallback)
-
+func (listener *HeartbeatListener) distributeHeartbeats(mainChannel chan *Heartbeat) {
+  channels := make(map[string]chan *Heartbeat)
   for {
-    time.Sleep(time.Second)
-    // If no heartbeat has been sent ever, the noHeartbeatsCallback won't be called, since it's
-    // waiting for the client to initially launch.
-    if listenConn.Alive && listenConn.LastHeartbeatTime > 60 && time.Now().Unix() - listenConn.LastHeartbeatTime > 60 {
-      noHeartbeatsCallback(listenConn)
-      listenConn.Alive = false
+    heartbeat := <-mainChannel
+    _, channelExists := channels[heartbeat.ClientID]
+
+    if !channelExists {
+      channels[heartbeat.ClientID] = make(chan *Heartbeat)
+      go listener.processHeartbeats(channels[heartbeat.ClientID])
+    }
+
+    channels[heartbeat.ClientID] <- heartbeat
+  }
+}
+
+func (listener *HeartbeatListener) processHeartbeats(channel chan *Heartbeat) {
+  timeouts := 0
+  for {
+    select {
+    case heartbeat := <-channel:
+      listener.ReceiveCallback(heartbeat)
+      timeouts = 0
+    case <-time.After(time.Second * time.Duration(listener.Timeout)):
+      timeouts++
+      listener.TimeoutCallback(listener.Timeout)
     }
   }
+}
+
+func (listener *HeartbeatListener) StartServer() {
+  listenAddr, err := net.ResolveUDPAddr("udp",fmt.Sprintf(":%d", listener.Port))
+	socket, err := net.ListenUDP("udp", listenAddr)
+	checkError(err)
+  listener.Socket = socket
+
+  mainChannel := make(chan *Heartbeat)
+  go listener.listenHeartbeats(mainChannel)
+  listener.distributeHeartbeats(mainChannel)
 }
