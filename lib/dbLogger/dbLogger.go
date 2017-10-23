@@ -44,19 +44,21 @@ func CreateTables(db *sql.DB) {
 	checkError(err)
 }
 
-func LogHeartbeat(db *sql.DB, heartbeat *heartbeat.Heartbeat) {
-  tx, err := db.Begin()
-  checkError(err)
+func LogHeartbeats(db *sql.DB, heartbeats chan *heartbeat.Heartbeat) {
+  for {
+    heartbeat := <-heartbeats
 
-  stmt, err := tx.Prepare("INSERT INTO heartbeats (client_id, ts) VALUES (?, ?)")
-  checkError(err)
+    tx, err := db.Begin()
+    checkError(err)
 
-  defer stmt.Close()
-  _, err = stmt.Exec(heartbeat.ClientID, heartbeat.Timestamp)
-  checkError(err)
+    stmt, err := tx.Prepare("INSERT INTO heartbeats (client_id, ts) VALUES (?, ?)")
+    checkError(err)
 
-  tx.Commit()
-  stmt.Close()
+    _, err = stmt.Exec(heartbeat.ClientID, heartbeat.Timestamp)
+    checkError(err)
+
+    tx.Commit()
+  }
 }
 
 func fetchHeartbeats(rows *sql.Rows) []*heartbeat.Heartbeat {
