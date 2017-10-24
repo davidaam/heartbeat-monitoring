@@ -1,0 +1,106 @@
+{% extends "builder/base.html" %}
+
+{% load static %}
+
+{% block content %}
+
+<div class="builder content">
+	<div class="row">
+  	<div class="col-lg-12">
+      <div class="row">
+        <div class="col-lg-4">
+          {% if tem_id %}
+            <h1 id="title">{{tem_name}}</h1>
+            <input id="template_id" type="hidden" name="template_id" value="{{tem_id}}">
+          {% else %}
+            <input id="template_id" type="hidden" name="template_id" value="">
+            <h1 id="title"></h1>
+
+          {% endif %}
+
+        </div>
+        <div class="col-lg-8">
+          {% if tem_id %}
+
+          <a type="button" class="btn btn-primary pull-right" style="margin-top: 20px;" id="guardar" href="{% url 'home' %}">Guardar</a>
+          <form id="preview-form" action="/revisar_template/{{tem_id}}" method="get">
+            <input type="submit" value="Preview"
+              name="type" id="frm1_submit" class="btn btn-success pull-right" style="margin-top:20px;" />
+          </form>
+          {% else %}
+            <a type="button" class="btn btn-primary pull-right" style="display: none;margin-top: 20px;" id="guardar" href="{% url 'home' %}">Guardar</a>
+              <form id = "preview-form" action="" method="get">
+                <input type="submit" value="Preview"
+                  name="type" id="frm1_submit" class = "btn btn-success pull-right " style="display: none;margin-top:20px;"/>
+                </form>
+            {% endif %}
+        </div>
+      </div>
+
+      {% if not tem_id %}
+      <div id="welcome" class="panel panel-border panel-success">
+        <div class="panel-heading">
+          <h1 class="panel-title">Bienvenido</h1>
+        </div>
+        <div class="panel-body">
+          <h3 class="text-row">Este es su manejador de contenido para diseñar el templates de su preferencia</h3>
+          <h3 class="text-row">En la sección de Patrones usted podrá seleccionar los patrones que desea agregar a su template</h3>
+        </div>
+      </div>
+      {% else %}
+				<script> var formsJSON = {}; </script>
+        {% for pattern in patterns %}
+          {% with templates_patron='patrones/'|add:pattern.name %}
+            {% include templates_patron|add:'/build.html' %}
+						{% if pattern.name == 'formulario' %}
+							<script> formsJSON[{{pattern.position}}] = {{pattern.form_json|safe}}; </script>
+						{% endif %}
+          {% endwith %}
+        {% endfor %}
+      {% endif %}
+
+    </div>
+  </div>
+
+  {% include 'patrones/encuesta/configurar-modal.html' %}
+  {% include 'patrones/formulario/agregar-modal.html' %}
+</div>
+
+{% if not tem_id %}
+<div id="new_template" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+
+      <!-- Modal content-->
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title">Nombre de la vista</h4>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="template_name"><b>Escoja un nombre para su vista:</b></label>
+            <input type="text" name="template_name" parsley-trigger="change" required
+                   placeholder="Nombre del template" class="form-control" id="template_name">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="accept_name_template" type="button" class="btn btn-default" data-dismiss="modal">Aceptar</button>
+          <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% endblock content %}
+
+{% block custom_script %}
+
+<script>
+  {% include 'patrones/formulario/customFormBuilder.js' with captchaHTML=captchaHTML %}
+</script>
+<script type="text/javascript" src="{% static 'js/builder-template.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/builder-poll.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/builder-form.js' %}"></script>
+{% endblock custom_script %}

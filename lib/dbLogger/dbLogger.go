@@ -11,7 +11,7 @@ import (
 
 func checkError(err error) {
   if err != nil {
-    log.Fatalln("[Error] %v", err)
+    log.Panicf("[Error] %v\n", err)
   }
 }
 
@@ -19,9 +19,6 @@ func InitializeDB(fn string) (*sql.DB) {
   db, err := sql.Open("sqlite3", fn)
 
   checkError(err)
-  if db == nil {
-    panic("DB could not be initialized")
-  }
 
   CreateTables(db)
   return db

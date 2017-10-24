@@ -31,5 +31,17 @@ func main() {
     Timeout: 10,
   }
 
+  catchPanic := func() {
+    f := func() {
+        if r := recover(); r != nil {
+        fmt.Println(r)
+        fmt.Println("Recovering...")
+        listener.StartServer()
+      }
+    }
+    defer f()
+  }
+
   listener.StartServer()
+  defer catchPanic()
 }

@@ -45,7 +45,7 @@ func parseHeartbeat (message string) (*Heartbeat, error) {
 
 func checkError(err error) {
   if err != nil {
-    log.Fatalln("[Error] %v", err)
+    log.Panicf("[Error] %v\n", err)
   }
 }
 
@@ -101,6 +101,8 @@ func (listener *HeartbeatListener) StartServer() {
   listenAddr, err := net.ResolveUDPAddr("udp",fmt.Sprintf(":%d", listener.Port))
 	socket, err := net.ListenUDP("udp", listenAddr)
 	checkError(err)
+  defer socket.Close()
+
   listener.Socket = socket
 
   mainChannel := make(chan *Heartbeat)

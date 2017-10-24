@@ -10,6 +10,10 @@ import (
 )
 
 func main() {
+  if len(os.Args) <= 1 {
+    fmt.Println("Usage: go run client.go <Client name>")
+    os.Exit(0)
+  }
   clientID := os.Args[1]
 
   sender := &heartbeat.HeartbeatSender { IP: "127.0.0.1", Port: 1234 }
