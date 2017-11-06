@@ -2,7 +2,7 @@ package middleware
 
 import (
   "net/http"
-  "../sessions"
+  "app/sessions"
 )
 
 func AuthMiddleware(h http.Handler) http.Handler {

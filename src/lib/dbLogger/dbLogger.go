@@ -1,11 +1,11 @@
 package dbLogger
 
 import (
-  "../heartbeat"
+  _ "github.com/mattn/go-sqlite3"
+  "lib/heartbeat"
   "database/sql"
   "log"
   "time"
-  _ "github.com/mattn/go-sqlite3"
   //_ "github.com/go-sql-driver/mysql"
 )
 

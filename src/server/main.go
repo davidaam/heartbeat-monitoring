@@ -1,8 +1,8 @@
 package main
 
 import (
-  "../lib/heartbeat"
-  "../lib/dbLogger"
+  "lib/heartbeat"
+  "lib/dbLogger"
   "fmt"
   "path/filepath"
 )

@@ -3,7 +3,7 @@ package userManagement
 import (
   "log"
   "golang.org/x/crypto/bcrypt"
-  "../dbLogger"
+  "lib/dbLogger"
 )
 
 func checkError(err error) {

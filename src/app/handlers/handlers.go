@@ -6,9 +6,9 @@ import (
   "encoding/json"
   "text/template"
   "github.com/gorilla/mux"
-  "../../../lib/dbLogger"
-  "../sessions"
-  "../../../lib/userManagement"
+  "lib/dbLogger"
+  "app/sessions"
+  "lib/userManagement"
 )
 
 func success(w http.ResponseWriter) {
@@ -40,7 +40,7 @@ func Heartbeats(w http.ResponseWriter, r *http.Request) {
 func Login(w http.ResponseWriter, r *http.Request) {
   vars := mux.Vars(r)
   session, err := sessions.Store.Get(r, "session")
-  loginTemplate, _ := template.ParseFiles("app/login.html")
+  loginTemplate, _ := template.ParseFiles("app/src/login.html")
   if err != nil {
     loginTemplate.Execute(w, nil)
   } else {
@@ -58,7 +58,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 func Signup(w http.ResponseWriter, r *http.Request) {
   vars := mux.Vars(r)
-  signupTemplate, _ := template.ParseFiles("app/signup.html")
+  signupTemplate, _ := template.ParseFiles("app/src/signup.html")
   if r.Method == "POST" {
     userManagement.CreateUser(vars["email"], vars["password"])
     http.Redirect(w, r, "/", 302)

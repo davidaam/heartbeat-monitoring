@@ -1,7 +1,7 @@
 package main
 
 import (
-  "../lib/heartbeat"
+  "lib/heartbeat"
   "time"
   "fmt"
   "log"
