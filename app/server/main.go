@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-
-  http.Handle("/", routes.Router())
+  r := routes.Router()
+  http.Handle("/", r)
   http.ListenAndServe(":8080", nil)
 }

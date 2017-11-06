@@ -54935,6 +54935,8 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+__webpack_require__(941);
+
 (0, _request2.default)('http://127.0.0.1:8080/heartbeats', function (error, response, body) {
   !error || console.log('Error:', error);
   var json = JSON.parse(body).reduce(function (json, datapoint) {
@@ -102071,6 +102073,12 @@ exports.debug = debug // for test
 //# sourceMappingURL=performance-now.js.map
 
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(7)))
+
+/***/ }),
+/* 941 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
 
 /***/ })
 /******/ ]);

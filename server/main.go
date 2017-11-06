@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-  sqliteDB, _ := filepath.Abs("heartbeats.sqlite3")
+  sqliteDB, _ := filepath.Abs("db.sqlite3")
 
   fmt.Printf("*** Heartbeats will be logged in %s ***\n\n", sqliteDB)
   db := dbLogger.InitializeDB(fmt.Sprintf("file:%s?cache=shared&mode=rwc", sqliteDB))

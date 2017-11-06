@@ -17,27 +17,44 @@ func checkError(err error) {
 
 func InitializeDB(fn string) (*sql.DB) {
   db, err := sql.Open("sqlite3", fn)
-
   checkError(err)
-
   CreateTables(db)
   return db
 }
 
 func CreateTables(db *sql.DB) {
-  //TODO: User management, client_id shouldn't be arbitrary, but a foreign
-  //key to a table of clients. Heartbeats that are not authorized should be
-  //rejected.
-
-	heartbeatsTable := `
+	usersTable := `
+	CREATE TABLE IF NOT EXISTS users(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+		email VARCHAR(255) NOT NULL,
+		passwordHash CHAR(60) NOT NULL,
+    CONSTRAINT UNIQ_email UNIQUE (email)
+	);
+	`
+  clientsTable := `
+	CREATE TABLE IF NOT EXISTS clients(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		client_name VARCHAR(100) NOT NULL,
+    CONSTRAINT UNIQ_ts_client_id UNIQUE (user_id, client_name),
+    CONSTRAINT FK_UserClient FOREIGN KEY (user_id) REFERENCES users (id)
+	);
+	`
+  heartbeatsTable := `
 	CREATE TABLE IF NOT EXISTS heartbeats(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
 		ts timestamp NOT NULL,
-		client_id VARCHAR(100) NOT NULL,
+		client_id INTEGER NOT NULL,
     CONSTRAINT UNIQ_ts_client_id UNIQUE (ts, client_id)
+    CONSTRAINT FK_ClientHeartbeat FOREIGN KEY (client_id) REFERENCES clients (id)
 	);
 	`
-	_, err := db.Exec(heartbeatsTable)
+
+	_, err := db.Exec(usersTable)
+	checkError(err)
+	_, err = db.Exec(clientsTable)
+	checkError(err)
+	_, err = db.Exec(heartbeatsTable)
 	checkError(err)
 }
 
@@ -77,7 +94,7 @@ func fetchHeartbeats(rows *sql.Rows) []*heartbeat.Heartbeat {
 }
 
 func ListHeartbeats() []*heartbeat.Heartbeat {
-  db := InitializeDB("../../server/heartbeats.sqlite3")
+  db := InitializeDB("server/db.sqlite3")
 	rows, err := db.Query("SELECT client_id, ts FROM heartbeats")
   checkError(err)
 
@@ -85,7 +102,7 @@ func ListHeartbeats() []*heartbeat.Heartbeat {
 }
 
 func GetHeartbeats(clientID string) []*heartbeat.Heartbeat {
-  db := InitializeDB("../../server/heartbeats.sqlite3")
+  db := InitializeDB("server/db.sqlite3")
 	rows, err := db.Query("SELECT client_id, ts FROM heartbeats WHERE client_id=?", clientID)
   checkError(err)
 

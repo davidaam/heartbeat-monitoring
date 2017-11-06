@@ -2,9 +2,10 @@ import moment from "moment"
 import * as d3 from "d3";
 import TimelineChart from "d3-timeline-chart"
 import request from "request"
+require('../scss/app.scss')
 
 request('http://127.0.0.1:8080/heartbeats', (error, response, body) => {
-  !error || console.log('Error:', error);
+  !error || console.log('Error:', error)
   let json = JSON.parse(body).reduce((json, datapoint) => {
     json[datapoint.clientID] = json[datapoint.clientID] || []
     json[datapoint.clientID].push(datapoint.timestamp)

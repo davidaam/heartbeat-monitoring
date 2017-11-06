@@ -1,13 +1,29 @@
 package routes
 
 import (
+  "net/http"
   "github.com/gorilla/mux"
   "../handlers"
+  "../middleware"
 )
+
+func RequireAuth(handler func(http.ResponseWriter, *http.Request)) http.Handler {
+  return middleware.AuthMiddleware(http.HandlerFunc(handler))
+}
 
 func Router() *mux.Router {
   r := mux.NewRouter()
-  r.HandleFunc("/heartbeats", handlers.Heartbeats)
-  r.HandleFunc("/heartbeats/{clientID}", handlers.ClientHeartbeats)
+
+  r.Handle("/signup", http.HandlerFunc(handlers.Signup))
+  r.Handle("/login", http.HandlerFunc(handlers.Login))
+  r.Handle("/", RequireAuth(handlers.Index))
+  r.Handle("/heartbeats", RequireAuth(handlers.Heartbeats))
+  r.Handle("/heartbeats/{clientID}", RequireAuth(handlers.ClientHeartbeats))
+
+  // Serve static files
+  r.PathPrefix("/css/").Handler(http.StripPrefix("/css/", http.FileServer(http.Dir("app/css/"))))
+  r.PathPrefix("/js/").Handler(http.StripPrefix("/js/", http.FileServer(http.Dir("app/js/"))))
+  r.PathPrefix("/img/").Handler(http.StripPrefix("/img/", http.FileServer(http.Dir("app/img/"))))
+
   return r
 }
